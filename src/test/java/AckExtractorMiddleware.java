@@ -28,7 +28,6 @@ public class AckExtractorMiddleware extends HttpEventCollectorMiddleware.HttpSen
 		callNext(events, sender,
 				new HttpEventCollectorMiddleware.IHttpSenderCallback() {
 			public void completed(int statusCode, final String reply) {
-				System.out.println("middelwareOK: " + reply);
 				if(statusCode == 200){
 					try {				
 						Map<String, Object> map = mapper.readValue(reply, new TypeReference<Map<String,Object>>(){});
@@ -45,7 +44,7 @@ public class AckExtractorMiddleware extends HttpEventCollectorMiddleware.HttpSen
 			}
 
 			public void failed(final Exception ex) {
-				System.out.println("ooops failed");
+				System.out.println("AckExtractorMiddleware.postEvent.failed: ooops failed, ex:" + ex);
 			}
 		});
 	}

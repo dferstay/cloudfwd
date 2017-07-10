@@ -31,18 +31,33 @@ under the License.
         <!--Socket name="socket" host="127.0.0.1" port="15000">
             <PatternLayout pattern="%p: %m%n" charset="UTF-8"/>
         </Socket-->
-        
+
+        <!--<Http name="http-input"-->
+              <!--url="https://127.0.0.1:8088/services/collector/event"-->
+              <!--token="D4C05DF2-1908-476D-B030-B52BA8FC593A"-->
+              <!--host=""-->
+              <!--index="kinesis"-->
+              <!--source=""-->
+              <!--sourcetype=""-->
+              <!--batch_size_bytes="0"-->
+              <!--batch_size_count="0"-->
+              <!--batch_interval="0"-->
+              <!--disableCertificateValidation="false"-->
+              <!--middleware="AckExtractorMiddleware"-->
+              <!--ack="true">-->
+            <!--<PatternLayout pattern="%m"/>-->
+        <!--</Http>-->
         <Http name="http-input"
-              url="https://127.0.0.1:8088/services/collector/event"
-              token="dab493e1-26aa-4916-9570-c7a169a2e433"
+              url="https://input-prd-p-nvp6b6gdjslj.cloud.splunk.com:8088/services/collector/event"
+              token="FCD5684C-1648-466F-8B84-F08919F14832"
               host=""
-              index="firehose"
+              index="kinesis"
               source=""
               sourcetype=""
               batch_size_bytes="0"
               batch_size_count="0"
               batch_interval="0"
-              disableCertificateValidation="true"
+              disableCertificateValidation="false"
               middleware="AckExtractorMiddleware"
               ack="true">
             <PatternLayout pattern="%m"/>

@@ -26,6 +26,23 @@ public class DummyTest {
 			}
 		});		
 		System.out.println("bork");
+//		for(int i = 0; i < 10 ; i++) {
+//			SplunkCimLogEvent e = new SplunkCimLogEvent("Event name" + i, "event-id" + i) {
+//				{
+//					// You can add an arbitrary key=value pair with addField.
+//					addField("name", "value");
+//
+//
+//					// SplunkCimLogEvent provides lots of convenience methods for
+//					// fields defined by Splunk's Common Information Model. See
+//					// the SplunkCimLogEvent JavaDoc for a complete list.
+//					setAuthAction("deny");
+//				}
+//			};
+//			LOG.info(e);
+//			LOG.error("FPOOOOOO" + i);
+//		}
+
 		SplunkCimLogEvent e = new SplunkCimLogEvent("Event name", "event-id") {
 			{
 				// You can add an arbitrary key=value pair with addField.

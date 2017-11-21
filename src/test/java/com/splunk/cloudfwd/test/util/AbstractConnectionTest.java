@@ -224,7 +224,7 @@ public abstract class AbstractConnectionTest {
         this.callbacks.checkWarnings();
       }
   }
-
+  
   public void checkSendExceptions() {
       if (shouldSendThrowException() && !didSendThrowException()) {
           Assert.fail("Send should have thrown an exception but it didn't");
@@ -483,6 +483,29 @@ public abstract class AbstractConnectionTest {
     //the creation of /event endpoint envelope "by hand"
    // return new UnvalidatedBytesEvent(getJsonToEvents(seqno).getBytes(), seqno);
     return new UnvalidatedByteBufferEvent(ByteBuffer.wrap(getJsonToEvents(seqno).getBytes()), seqno);
+  }
+  
+  /**
+   * assert that health is not empty and all channels failed with 
+   * provided exceptionClass and exceptionMessage.
+   * 
+   * @param exceptionClass
+   * @param exceptionMessage
+   */
+  public void assertAllChannelsFailed(Class exceptionClass, String exceptionMessage) {
+    List<HecHealth> healths = connection.getHealth();
+    Assert.assertTrue(!healths.isEmpty());
+    // we expect all channels to fail catching SSLPeerUnverifiedException in preflight 
+    if (healths.stream()
+            .map(h -> h.getStatus().getException())
+            .filter(e -> exceptionClass.isInstance(e))
+            .filter(e -> e.getMessage().equals(exceptionMessage))
+            .count() != healths.size()) {
+      Assert.fail("Expected all health channels to fail with ex: " + exceptionClass + 
+              " and message: " + exceptionMessage + 
+              ", but got instead the following exceptions in healths: " +
+              Arrays.toString(healths.stream().map(h -> h.getStatus().getException()).toArray()));
+    }
   }
 
 }

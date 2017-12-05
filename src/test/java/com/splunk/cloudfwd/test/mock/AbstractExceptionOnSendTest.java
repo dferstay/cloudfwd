@@ -30,7 +30,7 @@ import org.junit.Assert;
  *
  * @author ghendrey
  */
-public class ExceptionOnSendTest extends AbstractConnectionTest{
+public class AbstractExceptionOnSendTest extends AbstractConnectionTest{
 
     @Override
     protected int getNumEventsToSend() {

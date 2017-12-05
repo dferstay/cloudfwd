@@ -1,18 +1,13 @@
 package com.splunk.cloudfwd.test.mock;
 
-import com.splunk.cloudfwd.HecHealth;
 import com.splunk.cloudfwd.PropertyKeys;
 import com.splunk.cloudfwd.error.HecConnectionTimeoutException;
 import com.splunk.cloudfwd.error.HecMaxRetriesException;
-import com.splunk.cloudfwd.error.HecNoValidChannelsException;
-import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.List;
 import java.util.Properties;
 
 import static com.splunk.cloudfwd.PropertyKeys.MOCK_HTTP_CLASSNAME;
-import static com.splunk.cloudfwd.PropertyKeys.MOCK_HTTP_KEY;
 
 /**
  * Scenario: Invalid host URL
@@ -21,7 +16,7 @@ import static com.splunk.cloudfwd.PropertyKeys.MOCK_HTTP_KEY;
  *
  * Created by eprokop on 10/5/17.
  */
-public class SendOnConnectionWithInvalidHostTest extends ExceptionOnSendTest {
+public class SendOnConnectionWithInvalidHostTest extends AbstractExceptionOnSendTest {
 
   @Override
   protected Properties getProps() {

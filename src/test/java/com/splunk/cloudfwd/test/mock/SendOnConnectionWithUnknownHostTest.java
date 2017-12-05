@@ -3,13 +3,11 @@ package com.splunk.cloudfwd.test.mock;
 import com.splunk.cloudfwd.PropertyKeys;
 import com.splunk.cloudfwd.error.HecConnectionTimeoutException;
 import com.splunk.cloudfwd.error.HecMaxRetriesException;
-import com.splunk.cloudfwd.error.HecNoValidChannelsException;
 import org.junit.Test;
 
 import java.util.Properties;
 
 import static com.splunk.cloudfwd.PropertyKeys.MOCK_HTTP_CLASSNAME;
-import static com.splunk.cloudfwd.PropertyKeys.MOCK_HTTP_KEY;
 
 /**
  * Scenario: Unknown host provided (no "good" URLs)
@@ -17,7 +15,7 @@ import static com.splunk.cloudfwd.PropertyKeys.MOCK_HTTP_KEY;
  *
  * Created by eprokop on 10/5/17.
  */
-public class SendOnConnectionWithUnknownHostTest extends ExceptionOnSendTest {
+public class SendOnConnectionWithUnknownHostTest extends AbstractExceptionOnSendTest {
 
   @Override
   protected Properties getProps() {

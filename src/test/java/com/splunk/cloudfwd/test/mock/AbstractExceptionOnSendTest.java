@@ -2,6 +2,7 @@ package com.splunk.cloudfwd.test.mock;
 
 import com.splunk.cloudfwd.PropertyKeys;
 import com.splunk.cloudfwd.error.HecConnectionStateException;
+import com.splunk.cloudfwd.error.HecConnectionTimeoutException;
 import com.splunk.cloudfwd.error.HecNoValidChannelsException;
 import com.splunk.cloudfwd.test.util.AbstractConnectionTest;
 import java.util.Properties;
@@ -45,9 +46,10 @@ public class AbstractExceptionOnSendTest extends AbstractConnectionTest{
     }
        
     @Override
-    protected boolean isExpectedSendException(Exception e) {
-      if (e instanceof HecNoValidChannelsException) {
-        return e instanceof HecNoValidChannelsException;
+    protected boolean isExpectedSendException(Exception ex) {
+      LOG.info("AbstractExceptionOnSendTest, isExpectedSendException: ex: " + ex);
+      if (ex instanceof HecNoValidChannelsException) {
+        return true;
       }
       return false;
     }
@@ -61,6 +63,7 @@ public class AbstractExceptionOnSendTest extends AbstractConnectionTest{
         
         @Override
         public void systemError(Exception ex) {
+          LOG.info("AbstractExceptionOnSendTest, got systemError callabck: ex: " + ex);
           Assert.assertTrue(ex instanceof HecConnectionStateException);
         }
       };

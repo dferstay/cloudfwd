@@ -2,6 +2,7 @@ package com.splunk.cloudfwd.test.mock.health_check_tests;
 
 import com.splunk.cloudfwd.LifecycleEvent;
 import com.splunk.cloudfwd.error.HecConnectionTimeoutException;
+import com.splunk.cloudfwd.error.HecNoValidChannelsException;
 import com.splunk.cloudfwd.error.HecServerErrorResponseException;
 import com.splunk.cloudfwd.test.mock.AbstractExceptionOnSendTest;
 import org.junit.Test;
@@ -32,6 +33,7 @@ public class HealthCheckInDetentionTest extends AbstractExceptionOnSendTest {
     @Test
     public void checkInDetention() throws InterruptedException, TimeoutException, HecConnectionTimeoutException {
         super.sendEvents(false, false);
-        assertAllChannelsFailed(HecConnectionTimeoutException.class, "test");
+        assertAllChannelsFailed(HecNoValidChannelsException.class, 
+                "No valid channels available due to possible misconfiguration.");
     }
 }

@@ -21,7 +21,7 @@ limitations under the License.
       <PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level [thread:%t] %logger{1} - %msg%n"/>
     </RandomAccessFile>
   <!-- DO NOT REMOVE Console appender (useful for debugging) -->
--    <Console name="VerifyLogFile" target="SYSTEM_OUT">
+-    <Console name="Console" target="SYSTEM_OUT">
 -      <PatternLayout pattern="%highlight{%d{HH:mm:ss.SSS} %-5level [thread:%t] %logger{1} - %msg%n}"/>
 -    </Console>     
   </Appenders> 

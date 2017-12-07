@@ -15,6 +15,7 @@ package com.splunk.cloudfwd.test.integration.ssl_cert_tests;/*
  */
 
 import com.splunk.cloudfwd.HecHealth;
+import com.splunk.cloudfwd.PropertyKeys;
 import com.splunk.cloudfwd.error.HecConnectionTimeoutException;
 import com.splunk.cloudfwd.error.HecNoValidChannelsException;
 import com.splunk.cloudfwd.test.util.AbstractConnectionTest;
@@ -49,9 +50,9 @@ public class SslCertDoesNotMatchHostIT extends AbstractConnectionTest {
   public void sendThrowsAndHealthContainsException() throws InterruptedException, HecConnectionTimeoutException {
     super.sendEvents(false, false);
     List<HecHealth> healths = connection.getHealth();
-    Assert.assertTrue(!healths.isEmpty());
+    Assert.assertTrue("Expected healths to be not empty, but got this healths: " + healths, !healths.isEmpty());
     // we expect all channels to fail catching SSLPeerUnverifiedException in preflight 
-    Assert.assertTrue(healths.stream()
+    Assert.assertTrue("Expected all channel to fail with SSLPeerUnverifiedException, but got this healths: " + healths, healths.stream()
             .filter(e -> e.getStatus().getException() instanceof SSLPeerUnverifiedException)
             .count() == healths.size());
   }
@@ -63,6 +64,7 @@ public class SslCertDoesNotMatchHostIT extends AbstractConnectionTest {
     props.put(TOKEN, "DB22D948-5A1D-4E73-8626-0AB3143BEE47");
     props.put(DISABLE_CERT_VALIDATION, "false");
     props.put(MOCK_HTTP_KEY, "false");
+    props.put(PropertyKeys.EVENT_BATCH_SIZE, "0");
     return props;
   }
   

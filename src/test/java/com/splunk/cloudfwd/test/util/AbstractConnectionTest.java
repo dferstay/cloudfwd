@@ -496,7 +496,7 @@ public abstract class AbstractConnectionTest {
    */
   public void assertAllChannelsFailed(Class exceptionClass, String exceptionMessage) {
     List<HecHealth> healths = connection.getHealth();
-    Assert.assertTrue(!healths.isEmpty());
+    Assert.assertTrue("Expected health checks to be not empty, but got this healths: \"" + healths + "\"", !healths.isEmpty());
     // we expect all channels to fail catching SSLPeerUnverifiedException in preflight 
     healths.stream().forEach(e ->LOG.debug("Got exception in healths: " + e.getStatus().getException().getMessage()));
     if (healths.stream()

@@ -221,7 +221,7 @@ public final class HttpSender implements Endpoints, CookieClient {
     } catch (Exception ex) {
       LOG.error("Exception building httpClient: " + ex.getMessage(), ex);
       ConnectionCallbacks callbacks = getChannel().getCallbacks();
-      callbacks.failed(null, ex);
+      callbacks.systemError(ex);
     }
   }
   

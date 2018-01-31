@@ -195,7 +195,7 @@ public final class HttpSender implements Endpoints, CookieClient {
    *
    * @return true if started, false otherwise
    */
-  public synchronized boolean started() {
+  public boolean started() {
     if (isSimulated()) {
       simulatedEndpoints.start();
       return true;

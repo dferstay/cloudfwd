@@ -188,7 +188,7 @@ public class HecChannel implements Closeable, LifecycleEventObserver {
     
     //must increment only *after* we exit the blocking condition above
     unackedEventIds.add(events.getId());
-    LOG.debug("channel={} unackedCount={} unackedEventIds={}", this, getUnackedCount(), unackedEventIds);
+    LOG.info("channel={} unackedCount={} unackedEventIds={}", this, getUnackedCount(), unackedEventIds);
     if (!sender.getChannel().equals(this)) {
       String msg = "send channel mismatch: " + this.getChannelId() + " != " + sender.
               getChannel().getChannelId();
@@ -331,7 +331,7 @@ public class HecChannel implements Closeable, LifecycleEventObserver {
     if (!force && (closed || quiesced)) {
       return;
     }
-    LOG.debug("closeAndReplace removing channel channel={}, force={}", this, force);
+    LOG.info("closeAndReplace removing channel channel={}, force={}", this, force);
     this.health.decomissioned();
     //must add channel *before* quiesce(). 'cause if channel empty, quiesce proceeds directly to close which will kill terminate
     //the reaperScheduler, which will interrupt this very thread which was spawned by the reaper scheduler, and then  we

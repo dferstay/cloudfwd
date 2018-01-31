@@ -26,29 +26,29 @@ limitations under the License.
     </Console>
     <RollingFile name="RollingFile">
       <FileName>testLog.log</FileName>
-      <FilePattern>testLog-%d{yyyy-MM-dd-HH-mm-ss}-%i.log.gz</FilePattern>
+      <FilePattern>testLog-%d{yyyy-MM-dd-HH}-%i.log.gz</FilePattern>
       <PatternLayout>
         <Pattern>%d{HH:mm:ss.SSS} %-5level [thread:%t] %logger{1} - %msg%n</Pattern>
       </PatternLayout>
       <Policies>
         <TimeBasedTriggeringPolicy interval="24" modulate="true"/>
-        <SizeBasedTriggeringPolicy size="500 MB"/>
+        <SizeBasedTriggeringPolicy size="2 GB"/>
         <OnStartupTriggeringPolicy />
       </Policies>
-      <DefaultRolloverStrategy max="50" />
+      <DefaultRolloverStrategy max="100" />
     </RollingFile>
   </Appenders>
   <Loggers>
     <Root level="info">
-      <AppenderRef ref="VerifyLogFile"/>
+      <!--<AppenderRef ref="VerifyLogFile"/>-->
       <AppenderRef ref ="RollingFile"/>
     </Root>
     <Logger name="org.apache.http" level="error">
-      <AppenderRef ref="VerifyLogFile"/>
+      <!--<AppenderRef ref="VerifyLogFile"/>-->
       <AppenderRef ref ="RollingFile"/>
     </Logger>
     <Logger name="org.apache.http.wire" level="error">
-      <AppenderRef ref="VerifyLogFile"/>
+      <!--<AppenderRef ref="VerifyLogFile"/>-->
       <AppenderRef ref ="RollingFile"/>
     </Logger>
   </Loggers>

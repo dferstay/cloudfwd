@@ -16,11 +16,11 @@ limitations under the License.
 -->
 <Configuration status="info">
   <Appenders>
-    Do not enable %method (method-level logging is a performance killer)
+    <!--Do not enable %method (method-level logging is a performance killer)-->
     <RandomAccessFile name="VerifyLogFile" fileName="verify.log" immediateFlush="false" append="false">
       <PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level [thread:%t] %logger{1} - %msg%n"/>
     </RandomAccessFile>
-    DO NOT REMOVE Console appender (useful for debugging)
+    <!--DO NOT REMOVE Console appender (useful for debugging)-->
     <Console name="Console" target="SYSTEM_OUT">
         <PatternLayout pattern="%highlight{%d{HH:mm:ss.SSS} %-5level [thread:%t] %logger{1} - %msg%n}"/>
     </Console>
@@ -32,7 +32,7 @@ limitations under the License.
       </PatternLayout>
       <Policies>
         <TimeBasedTriggeringPolicy interval="24" modulate="true"/>
-        <SizeBasedTriggeringPolicy size="1 MB"/>
+        <SizeBasedTriggeringPolicy size="500 MB"/>
         <OnStartupTriggeringPolicy />
       </Policies>
       <DefaultRolloverStrategy max="50" />

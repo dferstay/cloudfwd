@@ -24,7 +24,7 @@ limitations under the License.
     <Console name="Console" target="SYSTEM_OUT">
         <PatternLayout pattern="%highlight{%d{HH:mm:ss.SSS} %-5level [thread:%t] %logger{1} - %msg%n}"/>
     </Console>
-    <RollingFile name="RollingFile">
+    <RollingFile name="RollingFile" immediateFlush="false" append="false">
       <FileName>testLog.log</FileName>
       <FilePattern>testLog-%d{yyyy-MM-dd-HH}-%i.log.gz</FilePattern>
       <PatternLayout>

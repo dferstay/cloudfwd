@@ -566,7 +566,7 @@ public class HecChannel implements Closeable, LifecycleEventObserver {
                 //already, in which case sendRoundRobbin will just ignore the sent messages
                 while (true) { 
                   try {
-                      if(!loadBalancer.sendRoundRobin(e, true)){
+                      if(!loadBalancer.resend(e)){
                           LOG.trace("LoadBalancer did not accept resend of {}", e);
                       }else{
                         LOG.trace("LB ACCEPTED resend of {}", e);

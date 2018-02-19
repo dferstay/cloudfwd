@@ -21,7 +21,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import com.splunk.cloudfwd.error.HecServerErrorResponseException;
-import java.time.Duration;
+import org.joda.time.Duration;
 import org.slf4j.Logger;
 
 /**
@@ -153,7 +153,7 @@ public class HecHealthImpl implements HecHealth {
 
     @Override
     public Duration getChannelAge() {
-       return Duration.ofMillis(System.currentTimeMillis() - birth);
+       return Duration.millis(System.currentTimeMillis() - birth);
     }
 
     /**
@@ -174,7 +174,7 @@ public class HecHealthImpl implements HecHealth {
 
     @Override
     public Duration getTimeSinceHealthChanged() {
-        return Duration.ofMillis(System.currentTimeMillis() - timeAtLastHealthStateChange);
+        return Duration.millis(System.currentTimeMillis() - timeAtLastHealthStateChange);
     }
     
     public void decomissioned(){
@@ -186,7 +186,7 @@ public class HecHealthImpl implements HecHealth {
         if(decommisionedTime==0){
             return Duration.ZERO;
         }else{
-            return Duration.ofMillis(System.currentTimeMillis() - decommisionedTime);
+            return Duration.millis(System.currentTimeMillis() - decommisionedTime);
         }
     }
     
@@ -199,7 +199,7 @@ public class HecHealthImpl implements HecHealth {
         if(quiesceTime==0){
             return Duration.ZERO;
         }else{
-            return Duration.ofMillis(System.currentTimeMillis() - quiesceTime);
+            return Duration.millis(System.currentTimeMillis() - quiesceTime);
         }
     }
     
@@ -212,7 +212,7 @@ public class HecHealthImpl implements HecHealth {
         if(declaredDeadTime==0){
             return Duration.ZERO;
         }else{
-            return Duration.ofMillis(System.currentTimeMillis() - declaredDeadTime);
+            return Duration.millis(System.currentTimeMillis() - declaredDeadTime);
         }
     }
 
@@ -221,7 +221,7 @@ public class HecHealthImpl implements HecHealth {
         if(finishCloseTime==0){
             return Duration.ZERO;
         }else{
-            return Duration.ofMillis(System.currentTimeMillis() - finishCloseTime);
+            return Duration.millis(System.currentTimeMillis() - finishCloseTime);
         }
     }
 

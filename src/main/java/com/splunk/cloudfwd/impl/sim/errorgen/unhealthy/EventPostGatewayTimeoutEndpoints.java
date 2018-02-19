@@ -35,11 +35,16 @@ public class EventPostGatewayTimeoutEndpoints extends SimulatedHECEndpoints {
 
     private static class GatewayTimeoutEventEndpoint extends EventEndpoint {
         @Override
-        public void post(HttpPostable events, FutureCallback<HttpResponse> cb) {
+        public void post(HttpPostable events, final FutureCallback<HttpResponse> cb) {
             // In this scenario, assume that the indexer queue filled up AFTER our
             // last health or ack poll, and we are now trying to post events to a full indexer
-            Runnable r = ()->cb.completed(new HecErrorResponse(
-                    new GatewayTimeoutEntity(), new GatewayTimeoutStatusLine()));
+            Runnable r = new Runnable() {
+                @Override
+                public void run() {
+                    cb.completed(new HecErrorResponse(
+                      new GatewayTimeoutEntity(), new GatewayTimeoutStatusLine()));
+                }
+            };
             delayResponse(r);
         }
     }

@@ -34,7 +34,6 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 
 import static com.splunk.cloudfwd.PropertyKeys.MAX_TOTAL_CHANNELS;
-import java.util.stream.Collectors;
 import static com.splunk.cloudfwd.LifecycleEvent.Type.EVENT_POST_FAILED;
 
 /**
@@ -72,13 +71,17 @@ public class LoadBalancer implements Closeable {
      */
     public List<HecHealth> getHealth() {
         final List<HecHealth> h = new ArrayList<>();
-        channels.values().forEach(c->h.add(c.getHealth()));
+        for (HecChannel c : channels.values()) {
+            h.add(c.getHealth());
+        }
         return h;
     }
     
     public List<HecHealth> getHealthNonBlocking() {
         final List<HecHealth> h = new ArrayList<>();
-        channels.values().forEach(c->h.add(c.getHealthNonblocking()));
+        for (HecChannel c: channels.values()) {
+            h.add(c.getHealthNonblocking());
+        }
         return h;
     }    
 
@@ -103,8 +106,10 @@ public class LoadBalancer implements Closeable {
     public void closeNow() {
         //this.discoveryScheduler.stop();
         Collection<EventBatchImpl> unacked = getConnection().getTimeoutChecker().getUnackedEvents();
-        unacked.forEach((e)->getConnection().getCallbacks().failed(e, new HecConnectionStateException(
-            "Connection closed with unacknowleged events remaining.", HecConnectionStateException.Type.CONNECTION_CLOSED)));
+        for (EventBatchImpl e : unacked) {
+            getConnection().getCallbacks().failed(e, new HecConnectionStateException(
+              "Connection closed with unacknowleged events remaining.", HecConnectionStateException.Type.CONNECTION_CLOSED));
+        }
         for (HecChannel c : this.channels.values()) {
             c.forceClose();
         }

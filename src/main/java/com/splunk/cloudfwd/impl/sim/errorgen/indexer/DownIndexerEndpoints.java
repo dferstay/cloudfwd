@@ -83,10 +83,13 @@ class DownIndexerHealthEndpoint extends HealthEndpoint {
 
 class DownIndexerEventEndpoint extends EventEndpoint {
   @Override
-  public void post(HttpPostable events, FutureCallback<HttpResponse> cb) {
+  public void post(HttpPostable events, final FutureCallback<HttpResponse> cb) {
     LOG.trace("/event rest endpoint fails because down");
-    Runnable respond = () -> {
-      ((HttpCallbacksAbstract) cb).failed(new Exception("Unable to connect"));
+    Runnable respond = new Runnable() {
+      @Override
+      public void run() {
+        ((HttpCallbacksAbstract) cb).failed(new Exception("Unable to connect"));
+      }
     };
     delayResponse(respond);
   }

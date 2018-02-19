@@ -48,11 +48,14 @@ public class InvalidTokenEndpoints extends SimulatedHECEndpoints {
 
     private class InvalidTokenPreFlightEndpoint extends PreFlightAckEndpoint {
         @Override
-        public void checkAckEndpoint(FutureCallback<HttpResponse> cb) {
-            Runnable respond = () -> {
-                cb.completed(new HecErrorResponse(
-                        new InvalidTokenEntity(), new Forbidden403StatusLine()
-                ));
+        public void checkAckEndpoint(final FutureCallback<HttpResponse> cb) {
+            Runnable respond = new Runnable() {
+                @Override
+                public void run() {
+                    cb.completed(new HecErrorResponse(
+                      new InvalidTokenEntity(), new Forbidden403StatusLine()
+                    ));
+                }
             };
             delayResponse(respond);
         }

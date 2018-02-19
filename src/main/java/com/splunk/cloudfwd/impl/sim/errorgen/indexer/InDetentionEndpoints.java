@@ -81,12 +81,15 @@ public class InDetentionEndpoints extends SimulatedHECEndpoints {
 
   static class InDetentionEventEndpoint extends EventEndpoint {
     @Override
-    public void post(HttpPostable events, FutureCallback<HttpResponse> cb) {
+    public void post(HttpPostable events, final FutureCallback<HttpResponse> cb) {
       System.out.println("/event rest endpoint returns 404 on detention");
-      Runnable respond = () -> {
-        ((HttpCallbacksAbstract) cb).completed(
+      Runnable respond = new Runnable() {
+        @Override
+        public void run() {
+          ((HttpCallbacksAbstract) cb).completed(
             "Not Found",
             404);
+        }
       };
       delayResponse(respond);
     }

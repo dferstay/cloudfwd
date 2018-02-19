@@ -23,9 +23,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -136,7 +136,7 @@ public class EventWithMetadata implements Event {
   }
 
   public void setTime(long seconds, long ms) {
-    this.time = Instant.ofEpochSecond(seconds).plusMillis(ms).toEpochMilli();
+    this.time = Duration.millis(seconds * 1000).plus(Duration.millis(ms)).getMillis();
   }
 
   /**

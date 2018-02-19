@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -148,7 +149,7 @@ public class AWSSourcetypeIT extends AbstractReconciliationTest {
         List<String> eventStrings;
         try {
             URL resource = getClass().getClassLoader().getResource(filename); // to use a file on classpath in resources folder.
-            eventStrings = Files.readAllLines(Paths.get(resource.getFile())); // events must be delimited by newlines
+            eventStrings = Files.readAllLines(Paths.get(resource.getFile()), StandardCharsets.UTF_8); // events must be delimited by newlines
         } catch (Exception ex) {
             Assert.fail("Problem reading file " + filename + ": " + ex.getMessage());
             eventStrings = null;

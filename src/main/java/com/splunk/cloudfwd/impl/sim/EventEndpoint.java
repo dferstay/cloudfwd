@@ -40,11 +40,14 @@ public class EventEndpoint extends ClosableDelayableResponder implements Endpoin
     //ackEndpoint.start();
   }
 
-  public void post(HttpPostable events, FutureCallback<HttpResponse> cb) {
-    Runnable respond = () -> {
-      cb.completed(new EventPostResponse(
-              new AckIdRespEntity(nextAckId())
-      ));
+  public void post(HttpPostable events, final FutureCallback<HttpResponse> cb) {
+    Runnable respond = new Runnable() {
+      @Override
+      public void run() {
+        cb.completed(new EventPostResponse(
+          new AckIdRespEntity(nextAckId())
+        ));
+      }
     };
     //return a single response with a delay uniformly distributed between  [0,5] ms
     delayResponse(respond);

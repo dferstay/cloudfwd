@@ -40,6 +40,7 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
+import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -135,11 +136,14 @@ public class ConnectionImpl implements Connection {
     //we must close asynchronously to prevent deadlocking
     //when close() is invoked from a callback like the
     //Exception handler
-    CountDownLatch latch = new CountDownLatch(1);
-    new Thread(() -> {
-      lb.close();
-      timeoutChecker.queisce();
-      latch.countDown();
+    final CountDownLatch latch = new CountDownLatch(1);
+    new Thread(new Runnable() {
+      @Override
+      public void run() {
+        lb.close();
+        timeoutChecker.queisce();
+        latch.countDown();
+      }
     }, "Connection Closer").start();
     try {
       latch.await();
@@ -154,11 +158,14 @@ public class ConnectionImpl implements Connection {
     //we must close asynchronously to prevent deadlocking
     //when closeNow() is invoked from a callback like the
     //Exception handler
-    CountDownLatch latch = new CountDownLatch(1);
-    new Thread(() -> {
-      lb.closeNow();
-      timeoutChecker.closeNow();
-      latch.countDown();
+    final CountDownLatch latch = new CountDownLatch(1);
+    new Thread(new Runnable() {
+      @Override
+      public void run() {
+        lb.closeNow();
+        timeoutChecker.closeNow();
+        latch.countDown();
+      }
     }, "Connection Closer").start();
     try {
       latch.await();
@@ -326,17 +333,28 @@ public class ConnectionImpl implements Connection {
         if(healths.isEmpty()){            
             throw new HecConnectionStateException("No HEC channels could be instatiated on Connection.",
                     HecConnectionStateException.Type.NO_HEC_CHANNELS);
-        }         
-        if(healths.stream().noneMatch(HecHealth::isHealthy)){   
+        }
+        boolean noneHealthy = true;
+        for (HecHealth health : healths) {
+          if (health.isHealthy()) {
+            noneHealthy = false;
+          }
+        }
+        if(noneHealthy){
             //FIXME TODO -- figure out how to close channels without getting ConnectionClosedException when 
             //no data has been sent through the channel yet
             //close all channels since none is healthy
-            healths.stream().forEach(health->{health.getChannel().close();});
-            
-            
+            for (HecHealth health : healths) {
+              health.getChannel().close();
+            }
+
             //throw whatever exception caused the first unhealthy channel to be unhealthy
-            throw healths.stream().filter(e->!e.isHealthy()).findFirst().get().getStatusException();
-        } 
+            for (HecHealth health : healths) {
+              if (!health.isHealthy()) {
+                throw health.getStatusException();
+              }
+            }
+        }
    }  
 
 
@@ -372,10 +390,10 @@ public class ConnectionImpl implements Connection {
             if(h.getChannel().isQuiesced()){
                 _quiesced++;
             }
-            if(!h.getTimeSinceDeclaredDead().isZero()){
+            if(!h.getTimeSinceDeclaredDead().equals(Duration.ZERO)){
                 _dead++;
             }
-            if(!h.getTimeSinceDecomissioned().isZero()){
+            if(!h.getTimeSinceDecomissioned().equals(Duration.ZERO)){
                 _decomissioned++;
             }
             if(h.getChannel().isClosed()){

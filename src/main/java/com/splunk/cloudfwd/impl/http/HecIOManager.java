@@ -78,15 +78,18 @@ public class HecIOManager implements Closeable {
         }
         synchronized(this){
             if (null == ackPollTask) {
-                Runnable poller = () -> {
-                    if (this.getAcknowledgementTracker().isEmpty()) {
-                        LOG.trace("No acks to poll for on {}", getSender().getChannel());
-                        return;
-                    } else if (this.isAckPollInProgress()) {
-                        LOG.trace("skipping ack poll - already have one in flight on {}", getSender().getChannel());
-                        return;
+                Runnable poller = new Runnable() {
+                    @Override
+                    public void run() {
+                        if (getAcknowledgementTracker().isEmpty()) {
+                            LOG.trace("No acks to poll for on {}", getSender().getChannel());
+                            return;
+                        } else if (isAckPollInProgress()) {
+                            LOG.trace("skipping ack poll - already have one in flight on {}", getSender().getChannel());
+                            return;
+                        }
+                        pollAcks();
                     }
-                    this.pollAcks();
                 };
                 long interval = sender.getConnection().getSettings().getAckPollMS();
                 this.ackPollTask = ThreadScheduler.getSchedulerInstance("ack poller").scheduleWithFixedDelay(poller, (long) (interval*Math.random()), interval, TimeUnit.MILLISECONDS);
@@ -102,7 +105,13 @@ public class HecIOManager implements Closeable {
             if (null == healthPollTask) {
                 long interval = sender.getConnection().getSettings().
                         getHealthPollMS();
-                this.healthPollTask = ThreadScheduler.getSchedulerInstance("health poller").scheduleWithFixedDelay(this::pollHealth, (long) (interval*Math.random()), interval, TimeUnit.MILLISECONDS);
+                Runnable r = new Runnable() {
+                    @Override
+                    public void run() {
+                        pollHealth();
+                    }
+                };
+                this.healthPollTask = ThreadScheduler.getSchedulerInstance("health poller").scheduleWithFixedDelay(r, (long) (interval*Math.random()), interval, TimeUnit.MILLISECONDS);
             }
         }
     }

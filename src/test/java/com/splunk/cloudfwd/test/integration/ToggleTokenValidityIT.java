@@ -42,20 +42,22 @@ public class ToggleTokenValidityIT extends AbstractReconciliationTest {
     @Test
     public void toggleTokenValidity() throws InterruptedException {
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-        executor.schedule(()->{
-            LOG.info("deleting token on server");
-            deleteTokenOnServer();
-            LOG.info("waiting for health poll to become unhealthy due to deleted token");
-            try {
-                Thread.sleep(connection.getSettings().getHealthPollMS()*5); // give health poll enough time to update health
-                checkHealth();
-                LOG.info("restoring token");
-                restoreToken();                
-            } catch (Exception e) {
-                this.assertionFailure = e.getMessage();
-                return;
+        executor.schedule(new Runnable() {
+            @Override
+            public void run() {
+                LOG.info("deleting token on server");
+                deleteTokenOnServer();
+                LOG.info("waiting for health poll to become unhealthy due to deleted token");
+                try {
+                    Thread.sleep(connection.getSettings().getHealthPollMS()*5); // give health poll enough time to update health
+                    checkHealth();
+                    LOG.info("restoring token");
+                    restoreToken();
+                } catch (Exception e) {
+                    assertionFailure = e.getMessage();
+                    return;
+                }
             }
-
         }, 3000, TimeUnit.MILLISECONDS);
 
         HecNoValidChannelsException e = null;

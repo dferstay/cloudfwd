@@ -146,7 +146,9 @@ public abstract class AbstractReconciliationTest extends AbstractConnectionTest 
       Set<String> keys = cliProperties.keySet();
       for (String e : keys) {
         if (System.getProperty(e) != null) {
-          cliProperties.replace(e, System.getProperty(e));
+          if (cliProperties.containsKey(e)) {
+            cliProperties.put(e, System.getProperty(e));
+          }
         }
       }
     }

@@ -91,9 +91,10 @@ public class IndexDiscoverer extends Observable {
         for (InetAddress iaddr : addrs) {
           InetSocketAddress sockAddr = new InetSocketAddress(iaddr, url.
                   getPort());
-          mappings.computeIfAbsent(url.toString(), k -> {
-            return new ArrayList<>();
-          }).add(sockAddr);
+          if (!mappings.containsKey(url.toString())) {
+            mappings.putIfAbsent(url.toString(), new ArrayList<InetSocketAddress>());
+          }
+          mappings.get(url.toString()).add(sockAddr);
         }
       } catch (UnknownHostException e) {
         String msg = "Unknown host. " + url;

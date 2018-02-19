@@ -24,7 +24,12 @@ public class PreFlightAckEndpoint implements Endpoint {
     Random rand = new Random(System.currentTimeMillis());
 
     public PreFlightAckEndpoint() {
-        ThreadFactory f = (Runnable r) -> new Thread(r, "PreFlightAckEndpoint");
+        ThreadFactory f = new ThreadFactory() {
+            @Override
+            public Thread newThread(Runnable r) {
+                return new Thread(r, "PreFlightAckEndpoint");
+            }
+        };
         executor = Executors.newScheduledThreadPool(1, f);
     }
 
@@ -39,11 +44,14 @@ public class PreFlightAckEndpoint implements Endpoint {
         executor.shutdownNow();
     }
 
-    public void checkAckEndpoint(FutureCallback<HttpResponse> cb) {
-        Runnable respond = () -> {
-            cb.completed(new CannedOKHttpResponse(
-                // response that means "preflight check is OK"
-                new CannedEntity("{\"acks\":[0:false]}")));
+    public void checkAckEndpoint(final FutureCallback<HttpResponse> cb) {
+        Runnable respond = new Runnable() {
+            @Override
+            public void run() {
+                cb.completed(new CannedOKHttpResponse(
+                  // response that means "preflight check is OK"
+                  new CannedEntity("{\"acks\":[0:false]}")));
+            }
         };
 
         delayResponse(respond);

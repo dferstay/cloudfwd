@@ -17,7 +17,7 @@ package com.splunk.cloudfwd;
 
 import com.splunk.cloudfwd.LifecycleEvent;
 import com.splunk.cloudfwd.impl.util.HecChannel;
-import java.time.Duration;
+import org.joda.time.Duration;
 
 /**
  *

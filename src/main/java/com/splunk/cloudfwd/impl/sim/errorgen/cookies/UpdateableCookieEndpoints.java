@@ -77,12 +77,15 @@ public class UpdateableCookieEndpoints extends SimulatedHECEndpoints {
 
     class CookiedPreFlightEnpoint extends PreFlightAckEndpoint {
         @Override
-        public void checkAckEndpoint(FutureCallback<HttpResponse> httpCallback) {
-            Runnable respond = () -> {
-                httpCallback.completed(
-                        new CookiedOKHttpResponse(
-                                new CannedEntity("{\\\"acks\\\":[0:false]}"),
-                                currentCookie));
+        public void checkAckEndpoint(final FutureCallback<HttpResponse> httpCallback) {
+            Runnable respond = new Runnable() {
+                @Override
+                public void run() {
+                    httpCallback.completed(
+                      new CookiedOKHttpResponse(
+                        new CannedEntity("{\\\"acks\\\":[0:false]}"),
+                        currentCookie));
+                }
             };
             delayResponse(respond);
         }
@@ -91,13 +94,16 @@ public class UpdateableCookieEndpoints extends SimulatedHECEndpoints {
     class CookiedEventpoint extends EventEndpoint {
 
         @Override
-        public void post(HttpPostable events, FutureCallback<HttpResponse> cb) {
-            Runnable respond = () -> {
-                LOG.debug("Event post response with cookie: " + currentCookie);
-                ((HttpCallbacksAbstract) cb).completed(
-                        new CookiedOKHttpResponse(
-                                new CannedEntity("{\"ackId\":" + nextAckId() + "}"),
-                                currentCookie));
+        public void post(HttpPostable events, final FutureCallback<HttpResponse> cb) {
+            Runnable respond = new Runnable() {
+                @Override
+                public void run() {
+                    LOG.debug("Event post response with cookie: " + currentCookie);
+                    ((HttpCallbacksAbstract) cb).completed(
+                      new CookiedOKHttpResponse(
+                        new CannedEntity("{\"ackId\":" + nextAckId() + "}"),
+                        currentCookie));
+                }
             };
             delayResponse(respond);
         }

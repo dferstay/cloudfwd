@@ -15,10 +15,13 @@
  */
 package com.splunk.cloudfwd.impl.util;
 
+import com.splunk.cloudfwd.Event;
 import com.splunk.cloudfwd.impl.ConnectionImpl;
 import com.splunk.cloudfwd.impl.EventBatchImpl;
 import com.splunk.cloudfwd.error.HecAcknowledgmentTimeoutException;
 import static com.splunk.cloudfwd.LifecycleEvent.Type.EVENT_TIMED_OUT;
+
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -28,7 +31,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 
 /**
@@ -78,7 +80,13 @@ public class TimeoutChecker implements EventTracker {
                 if(null != this.task){ //we must double check now that we are inside synchronized
                     return; 
                 }
-                this.task = timeoutCheckScheduler.scheduleWithFixedDelay(this::checkTimeouts, 0, getCheckInterval(),
+                Runnable ctr = new Runnable() {
+                  @Override
+                  public void run() {
+                    checkTimeouts();
+                  }
+                };
+                this.task = timeoutCheckScheduler.scheduleWithFixedDelay(ctr, 0, getCheckInterval(),
                 TimeUnit.MILLISECONDS);
             }
         }
@@ -91,7 +99,13 @@ public class TimeoutChecker implements EventTracker {
             //itself does not stop the timeoutCheckScheduler (which causes interrupted exception...
             //a thread running in a scheduler cannot awaitTermination of the scheduler itself WITHOUT
             //being interrupted. It's kinda like being asked to record your own time of death. Won't work.
-            new Thread(()->{if(null != task)task.cancel(false);},"TimeoutChecker closer").start();           
+            new Thread(new Runnable() {
+              @Override
+              public void run() {
+                if(null != task)
+                  task.cancel(false);
+              }
+            }, "TimeoutChecker closer").start();
             return;
         }
         LOG.debug("checking timeouts for {} EventBatches", eventBatches.size());
@@ -150,9 +164,13 @@ public class TimeoutChecker implements EventTracker {
 
     public List<EventBatchImpl> getUnackedEvents(HecChannel c) {
         //return only the batches whose channel matches c
-        return eventBatches.values().stream().filter(b -> {
-            return b.getHecChannel().getChannelId() == c.getChannelId();
-        }).collect(Collectors.toList());
+        List<EventBatchImpl> unacked = new ArrayList<>();
+        for (EventBatchImpl e : eventBatches.values()) {
+          if (e.getHecChannel().getChannelId() == c.getChannelId()) {
+            unacked.add(e);
+          }
+        }
+        return unacked;
     }
 
     public Collection<EventBatchImpl> getUnackedEvents() {

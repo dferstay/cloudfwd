@@ -46,7 +46,7 @@ public class AckEndpoint extends ClosableDelayableResponder implements Acknowled
     private static final ObjectMapper serializer = new ObjectMapper();
     
     protected AtomicLong ackId = new AtomicLong(-1); //so post increment, first id returned is 0
-    protected SortedMap<Long, Boolean> acksStates = Collections.synchronizedSortedMap(new TreeMap<>()); //key is ackId
+    protected SortedMap<Long, Boolean> acksStates = Collections.synchronizedSortedMap(new TreeMap<Long, Boolean>()); //key is ackId
     Random rand = new Random(System.currentTimeMillis());
     volatile boolean started;
     private final ScheduledThreadPoolExecutor executor;
@@ -132,7 +132,7 @@ public class AckEndpoint extends ClosableDelayableResponder implements Acknowled
     
     @Override
     public synchronized void pollAcks(HecIOManager ackMgr,
-            FutureCallback<HttpResponse> cb) {
+            final FutureCallback<HttpResponse> cb) {
         try {
             //System.out.println("Server side simulation: " + this.acksStates.size() + " acks tracked on server: " + acksStates);
             Collection<Long> unacked = ackMgr.getAcknowledgementTracker().
@@ -150,8 +150,11 @@ public class AckEndpoint extends ClosableDelayableResponder implements Acknowled
             resp.clear();
             resp.put("acks", acks);
             final HttpResponse httpResp = getResult(resp); //this must be calculated and made final, not call getResult from Runnable since we are using class fields (acks, and resp) which can mutate during the delay before the runnable runs
-            Runnable r = () -> {
-                cb.completed(httpResp);
+            Runnable r = new Runnable() {
+                @Override
+                public void run() {
+                    cb.completed(httpResp);
+                }
             };
             delayResponse(r);
             //executor.schedule(r, 1, TimeUnit.MILLISECONDS);

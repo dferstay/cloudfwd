@@ -32,10 +32,15 @@ public class EventPostNoAckIdEndpoints extends SimulatedHECEndpoints {
 
     private static class NoAckIdEndpoints extends EventEndpoint {
         @Override
-        public void post(HttpPostable events, FutureCallback<HttpResponse> cb) {
+        public void post(HttpPostable events, final FutureCallback<HttpResponse> cb) {
             // No Ack ID in the event response
-            Runnable r = ()-> cb.completed(new HecErrorResponse(
-                    new NoAckIdEntity(), new NoAckIdStatusLine()));
+            Runnable r = new Runnable() {
+                @Override
+                public void run() {
+                    cb.completed(new HecErrorResponse(
+                      new NoAckIdEntity(), new NoAckIdStatusLine()));
+                }
+            };
             delayResponse(r);
         }
     }

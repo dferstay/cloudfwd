@@ -35,12 +35,15 @@ public class InvalidEventEndpoint extends SimulatedHECEndpoints {
         final HecErrorResponseValueObject vo = new HecErrorResponseValueObject("Invalid data format", 6, 0);
         return new EventEndpoint() {
             public void post(HttpPostable events,
-                    FutureCallback<HttpResponse> cb) {
-                Runnable respond = () -> {
-                    try {
-                        ((HttpCallbacksAbstract)cb).completed(vo.toJson(),400);
-                    } catch (JsonProcessingException ex) {
-                        throw new RuntimeException(ex.getMessage(), ex);
+                    final FutureCallback<HttpResponse> cb) {
+                Runnable respond = new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            ((HttpCallbacksAbstract)cb).completed(vo.toJson(),400);
+                        } catch (JsonProcessingException ex) {
+                            throw new RuntimeException(ex.getMessage(), ex);
+                        }
                     }
                 };
                 //return a single response with a delay uniformly distributed between  [0,5] ms

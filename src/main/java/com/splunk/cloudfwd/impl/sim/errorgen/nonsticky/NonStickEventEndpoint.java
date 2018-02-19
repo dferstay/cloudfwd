@@ -74,9 +74,9 @@ public class NonStickEventEndpoint extends EventEndpoint {
   @Override
   public void close() {
     super.close();
-    this.ackEndpoints.forEach(e -> {
+    for (AckEndpoint e : ackEndpoints) {
       e.close();
-    });
+    }
   }
 
   @Override
@@ -85,9 +85,9 @@ public class NonStickEventEndpoint extends EventEndpoint {
       return;
     }
     super.start();
-    this.ackEndpoints.forEach(e -> {
+    for (AckEndpoint e : ackEndpoints) {
       e.start();
-    });
+    };
     started = true;
   }
 

@@ -47,9 +47,9 @@ public class LifecycleEventObservable {
 
   protected final void notifyObservers(LifecycleEvent event) {
     try {
-      observers.forEach((LifecycleEventObserver observer) -> {
+      for (LifecycleEventObserver observer : observers) {
         observer.update(event);
-      });
+      };
     } catch (Exception ex) {
       LOG.error(ex.getMessage(), ex);
       ConnectionCallbacks c = connection.getCallbacks();

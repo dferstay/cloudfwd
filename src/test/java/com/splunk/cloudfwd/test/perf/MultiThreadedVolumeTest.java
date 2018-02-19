@@ -58,14 +58,25 @@ public class MultiThreadedVolumeTest extends AbstractPerformanceTest {
         numSenderThreads = Integer.parseInt(cliProperties.get(NUM_SENDERS_KEY));
         //create executor before connection. Else if connection instantiation fails, NPE on cleanup via null executor
         ExecutorService senderExecutor = Executors.newFixedThreadPool(numSenderThreads,
-                (Runnable r) -> new Thread(r, "Connection client")); // second argument is Threadfactory
+          new ThreadFactory() {
+              @Override
+              public Thread newThread(Runnable r) {
+                  return new Thread(r, "Connection client");
+              }
+          });
         readEventsFile();
         connection.getSettings().setHecEndpointType(Connection.HecEndpoint.RAW_EVENTS_ENDPOINT);
         eventType = Event.Type.TEXT;
         List<Future> futureList = new ArrayList<>();
        
         for (int i = 0; i < numSenderThreads; i++) {
-            futureList.add(senderExecutor.submit(new SenderWorker(i)::sendAndWaitForAcks));
+            final SenderWorker sw = new SenderWorker(i);
+            futureList.add(senderExecutor.submit(new Runnable() {
+                @Override
+                public void run() {
+                    sw.sendAndWaitForAcks();
+                }
+            }));
         }
         
         try {
@@ -77,9 +88,9 @@ public class MultiThreadedVolumeTest extends AbstractPerformanceTest {
         checkAndLogPerformance(true);
         LOG.info("Performance passed all checks.");
         LOG.info("Stopping sender threads");
-        futureList.forEach((f)->{
+        for (Future f : futureList) {
             f.cancel(true);
-        });
+        };
         senderExecutor.shutdownNow();
         LOG.info("Closing connection");
         connection.close();
@@ -91,7 +102,9 @@ public class MultiThreadedVolumeTest extends AbstractPerformanceTest {
             Set<String> keys = cliProperties.keySet();
             for (String e : keys) {
                 if (System.getProperty(e) != null) {
-                    cliProperties.replace(e, System.getProperty(e));
+                    if (cliProperties.containsKey(e)) {
+                        cliProperties.put(e, System.getProperty(e));
+                    }
                 }
             }
         }

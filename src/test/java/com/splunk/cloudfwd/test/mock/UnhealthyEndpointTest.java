@@ -121,18 +121,21 @@ public final class UnhealthyEndpointTest extends AbstractConnectionTest {
         Assert.assertTrue("Expected unhealty channel but got: " + h, !h.isHealthy());
         LOG.trace("sending event that we expect to block on send");
         //must send from another thread
-        new Thread(() -> {
-          long start = System.currentTimeMillis();
-          try {
-            connection.send(getTimestampedRawEvent(2));
-          } catch (HecConnectionTimeoutException ex) {
-            LOG.error(ex.getMessage(), ex);
-            Assert.fail();
+        new Thread(new Runnable () {
+          @Override
+          public void run() {
+            long start = System.currentTimeMillis();
+            try {
+              connection.send(getTimestampedRawEvent(2));
+            } catch (HecConnectionTimeoutException ex) {
+              LOG.error(ex.getMessage(), ex);
+              Assert.fail();
+            }
+            long blockedOnUnhealthyChannelTime = System.currentTimeMillis() - start;
+            Assert.assertTrue(
+              "Message only blocked for " + blockedOnUnhealthyChannelTime + " ms. Expected at least 4000 ms.",
+              blockedOnUnhealthyChannelTime > sleepTime); //we must have blocked longer than the unhealthy time
           }
-          long blockedOnUnhealthyChannelTime = System.currentTimeMillis() - start;
-          Assert.assertTrue(
-                  "Message only blocked for " + blockedOnUnhealthyChannelTime + " ms. Expected at least 4000 ms.",
-                  blockedOnUnhealthyChannelTime > sleepTime); //we must have blocked longer than the unhealthy time 
         }).start();
         Thread.sleep(sleepTime); //wait couple seconds to let events spin in load balancer  
         TriggerableUnhealthyEndpoints.healthy = true; //will unblock the HecChannel on next health poll 

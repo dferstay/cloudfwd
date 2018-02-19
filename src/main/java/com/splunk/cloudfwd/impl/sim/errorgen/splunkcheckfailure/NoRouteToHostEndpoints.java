@@ -35,10 +35,13 @@ public class NoRouteToHostEndpoints extends SimulatedHECEndpoints {
 
     private class NoRouteToHostPreFlightEndpoint extends PreFlightAckEndpoint {
         @Override
-        public void checkAckEndpoint(FutureCallback<HttpResponse> cb) {
-            Runnable respond = () -> {
-                // simulates behavior of apache async http client if a route to host cannot be found.
-                cb.failed(new NoRouteToHostException("No route to host"));
+        public void checkAckEndpoint(final FutureCallback<HttpResponse> cb) {
+            Runnable respond = new Runnable() {
+                @Override
+                public void run() {
+                    // simulates behavior of apache async http client if a route to host cannot be found.
+                    cb.failed(new NoRouteToHostException("No route to host"));
+                }
             };
             delayResponse(respond);
         }

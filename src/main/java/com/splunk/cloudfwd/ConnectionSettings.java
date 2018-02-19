@@ -39,6 +39,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Properties;
@@ -382,7 +383,12 @@ public class ConnectionSettings {
                 throw e;
             }
         }
-        urlList.sort(Comparator.comparing(URL::toString));
+        Collections.sort(urlList, new Comparator<URL>() {
+            @Override
+            public int compare(URL o1, URL o2) {
+                return o1.toString().compareTo(o2.toString());
+            }
+        });
         return urlList;
     }
 

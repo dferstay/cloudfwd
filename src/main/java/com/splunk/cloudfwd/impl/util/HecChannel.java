@@ -126,7 +126,13 @@ public class HecChannel implements Closeable, LifecycleEventObserver {
   synchronized void pollAcks() {
      if(null == onDemandAckPollFuture || onDemandAckPollFuture.isDone()){
            //onDemandAckPoll = ThreadScheduler.getSchedulerInstance("on_demand_ack-poller").schedule(sender.getHecIOManager()::pollAcks, 0, TimeUnit.MILLISECONDS);
-            onDemandAckPollFuture = ThreadScheduler.getExecutorInstance("on_demand_ack-poll_executor").submit(sender.getHecIOManager()::pollAcks);           
+            Runnable r = new Runnable() {
+              @Override
+              public void run() {
+                sender.getHecIOManager().pollAcks();
+              }
+            };
+            onDemandAckPollFuture = ThreadScheduler.getExecutorInstance("on_demand_ack-poll_executor").submit(r);
        }
 
   }
@@ -156,21 +162,24 @@ public class HecChannel implements Closeable, LifecycleEventObserver {
 
     private void setupReaper() {
         //schedule the channel to be automatically quiesced at LIFESPAN, and closed and replaced when empty
-        long decomMs = getConnetionSettings().getChannelDecomMS();
+        final long decomMs = getConnetionSettings().getChannelDecomMS();
         if (decomMs > 0) {
             long decomTime = (long) (decomMs * (1+Math.random())); //[decomMs, 1+dcommMS]
-            this.reaperTaskFuture  = ThreadScheduler.getSchedulerInstance("channel_reaper").schedule(() -> {
+            this.reaperTaskFuture  = ThreadScheduler.getSchedulerInstance("channel_reaper").schedule(new Runnable() {
+              @Override
+              public void run() {
                 LOG.info("decommissioning channel (channel_decom_ms={}): {}",
-                        decomMs, HecChannel.this);
+                  decomMs, HecChannel.this);
                 try {
-                    closeAndReplace();
+                  closeAndReplace();
                 } catch (InterruptedException ex) {
-                    LOG.warn("Interrupted trying to close and replace '{}'",
-                            HecChannel.this);
+                  LOG.warn("Interrupted trying to close and replace '{}'",
+                    HecChannel.this);
                 } catch (Exception e) {
-                    LOG.error("Exception trying to close and replace '{}': {}",
-                            HecChannel.this, e.getMessage());
+                  LOG.error("Exception trying to close and replace '{}': {}",
+                    HecChannel.this, e.getMessage());
                 }
+              }
             }, (long)decomTime, TimeUnit.MILLISECONDS); //randomize the channel decommission - so that all channels do not decomission simultaneously.
         }
     }
@@ -336,13 +345,16 @@ public class HecChannel implements Closeable, LifecycleEventObserver {
     if(!quiesced){
         this.health.quiesced();
         LOG.debug("Scheduling watchdog to forceClose channel (if needed) in 3 minutes");
-        closeWatchDogTaskFuture = ThreadScheduler.getSchedulerInstance("channel_reaper").schedule(()->{
-            if(this.closeFinishedLatched.getCount()!=0){
-                LOG.warn("Channel isn't closed. Watchdog will force close it now.");
-                HecChannel.this.interalForceClose();
+        closeWatchDogTaskFuture = ThreadScheduler.getSchedulerInstance("channel_reaper").schedule(new Runnable() {
+          @Override
+          public void run() {
+            if(closeFinishedLatched.getCount()!=0){
+              LOG.warn("Channel isn't closed. Watchdog will force close it now.");
+              HecChannel.this.interalForceClose();
             }else{
-                LOG.debug("Channel was closed. Watchdog exiting.");
+              LOG.debug("Channel was closed. Watchdog exiting.");
             }
+          }
         }, channelQuiesceTimeout, TimeUnit.MILLISECONDS);
     }
     quiesced = true;
@@ -359,18 +371,22 @@ public class HecChannel implements Closeable, LifecycleEventObserver {
     interalForceClose();
   }
 
-  void interalForceClose() {  
+  void interalForceClose() {
+      final LifecycleEventObserver that = this;
       this.closed = true;
-      Runnable r = ()->{
-        try {
+      Runnable r = new Runnable() {
+        @Override
+        public void run() {
+          try {
             LOG.debug("finishing closing channel");
             loadBalancer.removeChannel(getChannelId(), true);
-            this.channelMetrics.removeObserver(this);
+            channelMetrics.removeObserver(that);
             cancelTasks(); //make sure all the Excutors are terminated before closing sender (else get ConnectionClosedException)
-            this.sender.close();
+            sender.close();
             closeFinishedLatched.countDown();
-        } catch (Exception e) {
+          } catch (Exception e) {
             LOG.error(e.getMessage(), e);
+          }
         }
       };
       //use thread to shutdown sender. Else we have problem with simulted endpoints where the 
@@ -542,8 +558,11 @@ public class HecChannel implements Closeable, LifecycleEventObserver {
 
     private void preflightCheck() {
         preflightCheckFuture = ThreadScheduler.getExecutorInstance("preflight_executor")
-            .submit(()->{
-                this.sender.getHecIOManager().preflightCheck();
+            .submit(new Runnable() {
+              @Override
+              public void run() {
+                sender.getHecIOManager().preflightCheck();
+              }
             });
     }
 
@@ -587,39 +606,42 @@ public class HecChannel implements Closeable, LifecycleEventObserver {
       if (null != task) {
         return;
       }
-      Runnable r = () -> {
-        //we here check to see of there has been any activity on the channel since
-        //the last time we looked. If not, then we say it was 'frozen' meaning jammed/innactive
-        if (unackedCount.get() > 0 && lastCountOfAcked == ackedCount.get()
-                && lastCountOfUnacked == unackedCount.get()) {
-          String msg = HecChannel.this  + " dead. Resending "+unackedCount.get()+" unacked messages and force closing channel";
-          LOG.warn(msg);
-          quiesce();
-          getCallbacks().systemWarning(new HecChannelDeathException(msg));
-          //synchronize on the load balancer so we do not allow the load balancer to be
-          //closed before  resendInFlightEvents. If that
-          //could happen, then the channel we replace this one with
-          //can be removed before we resendInFlightEvents
-          synchronized (loadBalancer) {
-            try{
-                loadBalancer.addChannelFromRandomlyChosenHost(); //add a replacement               
-            }catch(InterruptedException ex){
+      Runnable r = new Runnable() {
+        @Override
+        public void run() {
+          //we here check to see of there has been any activity on the channel since
+          //the last time we looked. If not, then we say it was 'frozen' meaning jammed/innactive
+          if (unackedCount.get() > 0 && lastCountOfAcked == ackedCount.get()
+            && lastCountOfUnacked == unackedCount.get()) {
+            String msg = HecChannel.this  + " dead. Resending "+unackedCount.get()+" unacked messages and force closing channel";
+            LOG.warn(msg);
+            quiesce();
+            getCallbacks().systemWarning(new HecChannelDeathException(msg));
+            //synchronize on the load balancer so we do not allow the load balancer to be
+            //closed before  resendInFlightEvents. If that
+            //could happen, then the channel we replace this one with
+            //can be removed before we resendInFlightEvents
+            synchronized (loadBalancer) {
+              try{
+                loadBalancer.addChannelFromRandomlyChosenHost(); //add a replacement
+              }catch(InterruptedException ex){
                 LOG.warn("Unable to replace dead channel: {}", ex);
+              }
+              resendInFlightEvents();
+              //don't force close until after events resent.
+              //If you do, you will interrupt this very thread when this DeadChannelDetector is shutdownNow()
+              //and the events will never send.
+              LOG.warn("Force closing dead channel {}", HecChannel.this);
+              interalForceClose();
+              health.dead();
             }
-            resendInFlightEvents(); 
-            //don't force close until after events resent. 
-            //If you do, you will interrupt this very thread when this DeadChannelDetector is shutdownNow()
-            //and the events will never send.
-            LOG.warn("Force closing dead channel {}", HecChannel.this);            
-            interalForceClose();
-            health.dead();
+            if(getConnection().isClosed()) {
+              loadBalancer.close();
+            }
+          } else { //channel was not 'frozen'
+            lastCountOfAcked = ackedCount.get();
+            lastCountOfUnacked = unackedCount.get();
           }
-          if(getConnection().isClosed()) {
-            loadBalancer.close();
-          }
-        } else { //channel was not 'frozen'
-          lastCountOfAcked = ackedCount.get();
-          lastCountOfUnacked = unackedCount.get();
         }
       };
       task = ThreadScheduler.getSchedulerInstance( "ChannelDeathChecker").scheduleWithFixedDelay(r, 0, intervalMS, TimeUnit.MILLISECONDS);
@@ -637,7 +659,7 @@ public class HecChannel implements Closeable, LifecycleEventObserver {
         List<EventBatchImpl> unacked = loadBalancer.getConnection().getTimeoutChecker().getUnackedEvents(HecChannel.this);
         LOG.trace("{} events need resending on dead channel {}", unacked.size(), HecChannel.this);       
         AtomicInteger count = new AtomicInteger(0);
-        unacked.forEach((e) -> {
+        for (EventBatchImpl e : unacked) {
                 //we must force messages to be sent because the connection could have been gracefully closed
                 //already, in which case sendRoundRobbin will just ignore the sent messages
                 while (true) { 
@@ -653,7 +675,7 @@ public class HecChannel implements Closeable, LifecycleEventObserver {
                      LOG.warn("Caught exception resending {}, exception was {}", ex.getMessage());
                   }
                 }
-              });
+        }
         LOG.info("Resent {} Events from dead channel {}", count,  HecChannel.this);
     }
 

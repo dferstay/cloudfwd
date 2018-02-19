@@ -77,27 +77,40 @@ public class ThreadScheduler {
     }       
 
     private static ExecutorService getFromExecutorCache(String name) {
-        return executors.computeIfAbsent(name, k->{
-            ThreadFactory f = (Runnable r) -> new Thread(r, name);            
-            ThreadPoolExecutor tpe = new ThreadPoolExecutor(2, MAX_THREADS_IN_EXECUTOR_POOL,
-                                   30L, TimeUnit.SECONDS,
-                                   new LinkedBlockingQueue<Runnable>(), f);
-            tpe.prestartAllCoreThreads();
-            return tpe;
-      });
+      final String n = name;
+      if (!executors.containsKey(n)) {
+        ThreadFactory f = new ThreadFactory() {
+          @Override
+          public Thread newThread(Runnable r) {
+            return new Thread(r, n);
+          }
+        };
+        ThreadPoolExecutor tpe = new ThreadPoolExecutor(2, MAX_THREADS_IN_EXECUTOR_POOL,
+          30L, TimeUnit.SECONDS,
+          new LinkedBlockingQueue<Runnable>(), f);
+        tpe.prestartAllCoreThreads();
+        executors.putIfAbsent(n, tpe);
+      }
+      return executors.get(n);
     }
     
     private static ScheduledThreadPoolExecutor getFromSchedulerCache(String name) {
-        return schedulers.computeIfAbsent(name, k->{
-            ThreadFactory f = (Runnable r) -> new Thread(r, name);
-             ScheduledThreadPoolExecutor scheduler = new ScheduledThreadPoolExecutor(MAX_THREADS_IN_SCHEDULER_POOL, f);
-             scheduler.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
-             scheduler.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
-             scheduler.setRemoveOnCancelPolicy(true); 
-             scheduler.setKeepAliveTime(1, TimeUnit.MINUTES); //probably this is not applicable to ScheduledThreadPoolExecutor since it always keeps exactly corePoolSize 
-             scheduler.prestartAllCoreThreads();
-             return scheduler;
-      });
-    }    
-  
+      final String n = name;
+      if (!schedulers.containsKey(n)) {
+        ThreadFactory f = new ThreadFactory() {
+          @Override
+          public Thread newThread(Runnable r) {
+            return new Thread(r, n);
+          }
+        };
+        ScheduledThreadPoolExecutor scheduler = new ScheduledThreadPoolExecutor(MAX_THREADS_IN_SCHEDULER_POOL, f);
+        scheduler.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+        scheduler.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
+        scheduler.setRemoveOnCancelPolicy(true);
+        scheduler.setKeepAliveTime(1, TimeUnit.MINUTES); //probably this is not applicable to ScheduledThreadPoolExecutor since it always keeps exactly corePoolSize
+        scheduler.prestartAllCoreThreads();
+        schedulers.putIfAbsent(n, scheduler);
+      }
+      return schedulers.get(n);
+    }
 }

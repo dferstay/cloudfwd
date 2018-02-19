@@ -256,9 +256,9 @@ public class EventBatchImpl implements EventBatch {
   }
 
   public void cancelEventTrackers() {
-    trackers.forEach(t -> {
+    for (EventTracker t : trackers) {
       t.cancel(this);
-    });
+    }
     trackers.clear();
   }
 

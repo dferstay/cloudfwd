@@ -137,7 +137,7 @@ public class ContinuousAckEndpoint extends ClosableDelayableResponder implements
     
     @Override
     public synchronized void pollAcks(HecIOManager ackMgr,
-            FutureCallback<HttpResponse> cb) {
+            final FutureCallback<HttpResponse> cb) {
         try {
             //System.out.println("Server side simulation: " + this.acksStates.size() + " acks tracked on server: " + acksStates);
             Collection<Long> unacked = ackMgr.getAcknowledgementTracker().
@@ -154,8 +154,11 @@ public class ContinuousAckEndpoint extends ClosableDelayableResponder implements
             resp.clear();
             resp.put("acks", acks);
             final HttpResponse httpResp = getResult(resp); //this must be calculated and made final, not call getResult from Runnable since we are using class fields (acks, and resp) which can mutate during the delay before the runnable runs
-            Runnable r = () -> {
-                cb.completed(httpResp);
+            Runnable r = new Runnable() {
+                @Override
+                public void run() {
+                    cb.completed(httpResp);
+                }
             };
             delayResponse(r);
             //executor.schedule(r, 1, TimeUnit.MILLISECONDS);
